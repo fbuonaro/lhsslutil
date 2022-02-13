@@ -25,7 +25,7 @@ if( NOT GTEST_FOUND )
 endif( NOT GTEST_FOUND )
 
 # pull in crypto
-find_package( OpenSSL REQUIRED )
+find_package( OpenSSL 1.0 REQUIRED )
 if( NOT OPENSSL_FOUND )
     message( FATAL_ERROR "openssl/crypto could not be found" )
 endif( NOT OPENSSL_FOUND )
