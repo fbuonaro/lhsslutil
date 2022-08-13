@@ -32,6 +32,7 @@ endif( NOT OPENSSL_FOUND )
 
 
 add_library( lhsslutil SHARED
+    "${LIB_SRC_DIR}/base64.cxx"
     "${LIB_SRC_DIR}/hashwrapper.cxx"
     "${LIB_SRC_DIR}/hexutils.cxx"
     "${LIB_SRC_DIR}/opensslhash.cxx"
@@ -59,6 +60,7 @@ set( TST_SRC_DIR "./test" )
 enable_testing()
 
 add_executable( testlhsslutil
+    "${TST_SRC_DIR}/testbase64.cxx"
     "${TST_SRC_DIR}/testhashwrapper.cxx"
     "${TST_SRC_DIR}/testopensslprocesscontext.cxx"
     "${TST_SRC_DIR}/testrandomness.cxx" )
