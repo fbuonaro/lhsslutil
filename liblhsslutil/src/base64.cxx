@@ -67,7 +67,7 @@ namespace LHSSLUtilNS
             }
 
             ret = BIO_write( bioB64, msg, msgLen );
-            if ( ret != msgLen )
+            if ( static_cast<size_t>( ret ) != msgLen )
             {
                 return 5;
             }

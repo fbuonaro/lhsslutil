@@ -17,6 +17,8 @@ namespace LHSSLUtilNS
 #ifdef OPENSSL_THEAD_DEBUG
         std::cout << "OpenSSLProcess::openssl_locking_callback: locking " << file << " at line " << line << std::endl;
 #endif
+        (void)file;
+        (void)line;
         OpenSSLProcessContext::ProcessToggleLock( lock_mode, lock_number );
     }
 
@@ -34,7 +36,7 @@ namespace LHSSLUtilNS
     void OpenSSLProcessContext::ProcessInitialize( OpenSSLModules modules )
     {
 #ifdef OPENSSL_THREADS
-        if( !OpenSSLProcessContext::processInitialized )
+        if ( !OpenSSLProcessContext::processInitialized )
         {
             OpenSSLProcessContext::processInstance.Initialize( modules );
             OpenSSLProcessContext::processInitialized = true;
@@ -49,7 +51,7 @@ namespace LHSSLUtilNS
     void OpenSSLProcessContext::ProcessCleanup()
     {
 #ifdef OPENSSL_THREADS
-        if( OpenSSLProcessContext::processInitialized )
+        if ( OpenSSLProcessContext::processInitialized )
         {
             OpenSSLProcessContext::processInstance.Cleanup();
             processInitialized = false;
@@ -61,36 +63,36 @@ namespace LHSSLUtilNS
 
     void OpenSSLProcessContext::ProcessToggleLock( int lock_mode, int lock_number )
     {
-        if( OpenSSLProcessContext::processInitialized )
+        if ( OpenSSLProcessContext::processInitialized )
             OpenSSLProcessContext::processInstance.ToggleLock( lock_mode, lock_number );
     }
 
     unsigned long OpenSSLProcessContext::ProcessCurrentThreadIdentifier()
     {
         unsigned long ret = 0;
-        if( OpenSSLProcessContext::processInitialized )
+        if ( OpenSSLProcessContext::processInitialized )
             ret = OpenSSLProcessContext::processInstance.CurrentThreadIdentifier();
         return ret;
     }
 
     //EXCEPTIONS
-    const char* OpenSSLProcessContextMultiThreadingDisabled::what() const throw()
+    const char* OpenSSLProcessContextMultiThreadingDisabled::what() const throw( )
     {
         return "OpenSSLProcessContext not enabled";
     }
 
-    const char* OpenSSLProcessContextAlreadyInitialized::what() const throw()
+    const char* OpenSSLProcessContextAlreadyInitialized::what() const throw( )
     {
         return "OpenSSLProcessContext already initialized";
     }
 
     //PROTECTED CTOR/DTOR, methdods
     OpenSSLProcessContext::OpenSSLProcessContext()
-    :   modules( OpenSSLModule::None )
-    ,   thread_ids()
-    ,   thread_ids_mutex()
-    ,   last_thread_id( 0 )
-    ,   openssl_mutexes( nullptr )
+        : modules( OpenSSLModule::None )
+        , thread_ids()
+        , thread_ids_mutex()
+        , last_thread_id( 0 )
+        , openssl_mutexes( nullptr )
     {
     }
 
@@ -100,15 +102,15 @@ namespace LHSSLUtilNS
         {
             Cleanup();
         }
-        catch( std::exception e )
+        catch ( std::exception e )
         {
             std::cerr << "OpenSSLProcessContext::~OpenSSLProcessContext exception["
-                      << e.what() << "]" << std::endl;
+                << e.what() << "]" << std::endl;
         }
-        catch( ... )
+        catch ( ... )
         {
             std::cerr << "OpenSSLProcessContext::~OpenSSLProcessContext unknown exception"
-                      << std::endl;
+                << std::endl;
         }
     }
 
@@ -124,7 +126,7 @@ namespace LHSSLUtilNS
 
         CRYPTO_set_locking_callback( openssl_locking_callback );
 
-        if( ( modules & OpenSSLModule::Randomness ) != OpenSSLModule::None  )
+        if ( ( modules & OpenSSLModule::Randomness ) != OpenSSLModule::None )
         {
             OpenSSLRandomnessGenerator::ProcessInitialize();
         }
@@ -133,7 +135,7 @@ namespace LHSSLUtilNS
     void OpenSSLProcessContext::Cleanup()
     {
 
-        if( ( modules & OpenSSLModule::Randomness ) != OpenSSLModule::None )
+        if ( ( modules & OpenSSLModule::Randomness ) != OpenSSLModule::None )
         {
             OpenSSLRandomnessGenerator::ProcessCleanup();
         }
@@ -142,9 +144,9 @@ namespace LHSSLUtilNS
 
         CRYPTO_THREADID_set_callback( NULL );
 
-        if( openssl_mutexes != nullptr )
+        if ( openssl_mutexes != nullptr )
         {
-            for( int i = 0; i < CRYPTO_num_locks(); ++i )
+            for ( int i = 0; i < CRYPTO_num_locks(); ++i )
             {
                 openssl_mutexes[ i ].unlock();
             }
@@ -165,7 +167,7 @@ namespace LHSSLUtilNS
         std::unordered_map< std::thread::id, unsigned long >::const_iterator cend =
             thread_ids.cend();
 
-        if( cit != cend )
+        if ( cit != cend )
         {
             ret = cit->second;
         }
@@ -185,7 +187,7 @@ namespace LHSSLUtilNS
     //lock whatever is at lock_number
     void OpenSSLProcessContext::ToggleLock( int lock_mode, int lock_number )
     {
-        if( lock_mode & CRYPTO_LOCK )
+        if ( lock_mode & CRYPTO_LOCK )
         {
             openssl_mutexes[ lock_number ].lock();
         }
