@@ -13,6 +13,9 @@ RUN yum -y --enablerepo=extras install epel-release && \
 ##################################################################################
 # STAGE 1 - build tools and libraries needed to build lhsslutil
 ##################################################################################
+### deps ###
+FROM lhscriptutil:dist-${BUILD_TAG} AS lhscriptutil_dist_build
+### deps ###
 FROM lhsslutil-base-env as lhsslutil-build-env
 
 # for compiling and unit testing
@@ -25,8 +28,8 @@ RUN yum -y install \
         rpm-build && \
     yum clean all
 
-ADD ./modules/lhscriptutil/scripts/refreshOrSetupLHDistYumRepo.sh /refreshOrSetupLHDistYumRepo.sh
-RUN /refreshOrSetupLHDistYumRepo.sh
+COPY --from=lhscriptutil_dist_build /lhscriptutil/ /lhscriptutil/
+RUN /lhscriptutil/scripts/refreshOrSetupLHDistYumRepo.sh
 
 RUN yum -y install \
         openssl-devel && \
@@ -49,8 +52,8 @@ RUN cd /lhsslutil && \
     ../ && \
     make && \
     make test && \
-    make package && \
-    /refreshOrSetupLHDistYumRepo.sh
+    make package
+RUN /lhscriptutil/scripts/refreshOrSetupLHDistYumRepo.sh
 
 ENV BUILD_TAG=${BUILD_TAG}
 LABEL build_tag="${BUILD_TAG}"
@@ -74,29 +77,17 @@ RUN cd /lhsslutil/build && \
 ##################################################################################
 FROM lhsslutil-base-env as lhsslutil-main
 
-COPY --from=lhsslutil-build /usr/ /usr/
-COPY --from=lhsslutil-build /etc/ /etc/
-COPY --from=lhsslutil-build /lhsslutil/ /lhsslutil/
-RUN cd /lhsslutil/build && \
-    make install && \
-    make package && \
+COPY --from=lhsslutil-build /lhdist/ /lhdist/
+COPY --from=lhsslutil-build-env /lhscriptutil/ /lhscriptutil/
+RUN /lhscriptutil/scripts/refreshOrSetupLHDistYumRepo.sh
+RUN yum -y repo-pkgs lhdistrepo install && \
     ldconfig && \
-    cd / && \
-    rm -rf /lhsslutil
+    yum clean all
 
 ##################################################################################
 # STAGE 5 - the base image with additional built runtime dependencies and 
 #           lhsslutil binaries includes nothing from build-env
 ##################################################################################
-FROM lhsslutil-base-env as lhsslutil-dist-test
-
-COPY --from=lhsslutil-build /lhdist/ /lhdist/
-ADD ./modules/lhscriptutil/scripts/refreshOrSetupLHDistYumRepo.sh /refreshOrSetupLHDistYumRepo.sh
-RUN /refreshOrSetupLHDistYumRepo.sh
-RUN yum -y repo-pkgs lhdistrepo install && \
-    ldconfig && \
-    yum clean all
-
 FROM lhsslutil-base-env as lhsslutil-dist
 
-COPY --from=lhsslutil-dist-test /lhdist/ /lhdist/
+COPY --from=lhsslutil-main /lhdist/ /lhdist/
